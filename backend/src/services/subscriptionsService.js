@@ -62,6 +62,10 @@ export function buscarAssinaturaPorId(id) {
   return db.prepare('SELECT * FROM subscriptions WHERE id = ? AND desativado_em IS NULL').get(id);
 }
 
+export function buscarAssinaturaPorIdGeral(id) {
+  return db.prepare('SELECT * FROM subscriptions WHERE id = ?').get(id);
+}
+
 export function buscarAssinaturas(status = 'ativo') {
   return db
     .prepare('SELECT * FROM subscriptions WHERE status = ? AND desativado_em IS NULL ORDER BY data_cobranca')
@@ -132,6 +136,30 @@ export function desativarAssinatura(id) {
   `).run(id);
 
   return { ...existente, desativado_em: new Date().toISOString() };
+}
+
+export function alternarStatusAtivacao(id, ativo) {
+  const existente = buscarAssinaturaPorIdGeral(id);
+
+  if (!existente) {
+    return null;
+  }
+
+  if (ativo) {
+    db.prepare(`
+      UPDATE subscriptions
+      SET desativado_em = NULL
+      WHERE id = ?
+    `).run(id);
+  } else {
+    db.prepare(`
+      UPDATE subscriptions
+      SET desativado_em = datetime('now')
+      WHERE id = ?
+    `).run(id);
+  }
+
+  return buscarAssinaturaPorIdGeral(id);
 }
 
 export async function calcularResumoMensal() {

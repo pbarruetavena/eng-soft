@@ -6,6 +6,7 @@ import {
   validarAssinatura,
   calcularResumoMensal,
   buscarProximasCobrancas,
+  alternarStatusAtivacao,
 } from '../services/subscriptionsService.js';
 import { enviarLembrete } from '../services/mail/emailService.js';
 import { hojeUTC, parseDataISOParaUTC } from '../util/dateUtils.js';
@@ -58,6 +59,37 @@ export function deleteSubscription(req, res) {
   }
 
   return res.status(200).json(assinaturaCancelada);
+}
+
+export function toggleSubscriptionStatus(req, res) {
+  const id = parseId(req.params.id);
+
+  if (id === null) {
+    return res.status(400).json({ error: 'ID inválido. Deve ser um número inteiro positivo.' });
+  }
+
+  const { ativo } = req.body || {};
+
+  if (typeof ativo !== 'boolean') {
+    return res.status(400).json({
+      error: 'O campo "ativo" é obrigatório e deve ser um valor booleano (true ou false).',
+    });
+  }
+
+  try {
+    const assinatura = alternarStatusAtivacao(id, ativo);
+
+    if (!assinatura) {
+      return res.status(404).json({ error: 'Assinatura não encontrada.' });
+    }
+
+    return res.status(200).json(assinatura);
+  } catch (error) {
+    console.error('[subscriptions/toggle-status] Erro ao alterar status de ativação:', error);
+    return res.status(500).json({
+      error: 'Não foi possível alterar o status de ativação da assinatura.',
+    });
+  }
 }
 
 export async function getSummary(req, res) {
