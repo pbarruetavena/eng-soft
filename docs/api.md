@@ -352,11 +352,4 @@ Retorna 200 quando o servidor está funcionando.
 | GET | `/stats/monthly-evolution` | US7 | Série mensal de gastos |
 | GET | `/stats/by-category` | US8 | Total por categoria |
 
----
 
-## 9. Pendente para as próximas sprints
-
-- Autenticação: fora de escopo (sistema single-user).
-- O job de e-mail (`node-cron`) roda em background; o endpoint `POST /subscriptions/notify-upcoming` existe apenas para disparo manual em testes.
-
----
