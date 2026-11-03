@@ -30,6 +30,10 @@ function gerarUltimos12Meses(referencia) {
 }
 
 function estavaAtivaNoMes(assinatura, indiceDoMes) {
+  if (assinatura.desativado_em) {
+    return false;
+  }
+
   const indiceInicio = paraIndiceDeMes(assinatura.data_inicio ?? assinatura.criado_em);
 
   if (indiceInicio > indiceDoMes) {
@@ -77,6 +81,10 @@ export async function atualizarAssinatura(id, dados) {
 
 export async function removerAssinatura(id) {
   return subscriptionRepository.remove(id);
+}
+
+export async function desativarAssinatura(id) {
+  return subscriptionRepository.desativar(id);
 }
 
 export async function buscarResumoAssinaturas() {

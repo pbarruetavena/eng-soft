@@ -59,12 +59,12 @@ export function validarAssinatura(dados = {}) {
 export const validarNovaAssinatura = validarAssinatura;
 
 export function buscarAssinaturaPorId(id) {
-  return db.prepare('SELECT * FROM subscriptions WHERE id = ?').get(id);
+  return db.prepare('SELECT * FROM subscriptions WHERE id = ? AND desativado_em IS NULL').get(id);
 }
 
 export function buscarAssinaturas(status = 'ativo') {
   return db
-    .prepare('SELECT * FROM subscriptions WHERE status = ? ORDER BY data_cobranca')
+    .prepare('SELECT * FROM subscriptions WHERE status = ? AND desativado_em IS NULL ORDER BY data_cobranca')
     .all(status);
 }
 
@@ -92,7 +92,7 @@ export function atualizarAssinatura(
   db.prepare(`
     UPDATE subscriptions
     SET nome = ?, valor = ?, data_cobranca = ?, data_inicio = ?, categoria = ?
-    WHERE id = ?
+    WHERE id = ? AND desativado_em IS NULL
   `).run(nome.trim(), valor, data_cobranca, data_inicio, categoria, id);
 
   return buscarAssinaturaPorId(id);
@@ -100,7 +100,7 @@ export function atualizarAssinatura(
 
 export function cancelarAssinatura(id) {
   const existente = db
-    .prepare('SELECT * FROM subscriptions WHERE id = ? AND status = ?')
+    .prepare('SELECT * FROM subscriptions WHERE id = ? AND status = ? AND desativado_em IS NULL')
     .get(id, 'ativo');
 
   if (!existente) {
@@ -116,6 +116,23 @@ export function cancelarAssinatura(id) {
   return buscarAssinaturaPorId(id);
 }
 
+export function desativarAssinatura(id) {
+  const existente = db
+    .prepare('SELECT * FROM subscriptions WHERE id = ? AND desativado_em IS NULL')
+    .get(id);
+
+  if (!existente) {
+    return null;
+  }
+
+  db.prepare(`
+    UPDATE subscriptions
+    SET desativado_em = datetime('now')
+    WHERE id = ?
+  `).run(id);
+
+  return { ...existente, desativado_em: new Date().toISOString() };
+}
 
 export async function calcularResumoMensal() {
   const { somaValor, quantidade } = await getResumoAssinaturasAtivas();
@@ -169,6 +186,10 @@ function gerarUltimos12Meses(referencia) {
 }
 
 function estavaAtivaNoMes(assinatura, indiceDoMes) {
+  if (assinatura.desativado_em) {
+    return false;
+  }
+
   const indiceInicio = paraIndiceDeMes(assinatura.data_inicio ?? assinatura.criado_em);
 
   if (indiceInicio > indiceDoMes) {

@@ -16,6 +16,7 @@ model Subscription {
   status        String   @default("ativo")
   criado_em     DateTime @default(now())
   cancelado_em  DateTime?
+  desativado_em DateTime?
 
   avisos NotificationDelivery[]
 
