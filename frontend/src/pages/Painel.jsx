@@ -6,7 +6,7 @@ import SubscriptionForm from '../components/SubscriptionForm.jsx';
 import SubscriptionListItem from '../components/SubscriptionListItem.jsx';
 import { useMonthlyEvolution } from '../hooks/useMonthlyEvolution.js';
 import { useSubscriptionSummary } from '../hooks/useSummary.js';
-import { listSubscriptions, createSubscription, updateSubscription, deleteSubscription } from '../services/api.js';
+import { listSubscriptions, createSubscription, updateSubscription, deleteSubscription, excluirSubscription } from '../services/api.js';
 import './Painel.css';
 
 const formatoMoeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -67,6 +67,15 @@ export default function Painel() {
     }
   }
 
+  async function handleExcluir(id) {
+    try {
+      await excluirSubscription(id);
+      await atualizarListaResumoEHistorico();
+    } catch (err) {
+      setErroLista(err.message);
+    }
+  }
+
   return (
     <div className="sf-painel">
       <Nav tone="on-light" showCta={false} />
@@ -107,6 +116,7 @@ export default function Painel() {
                 formatoMoeda={formatoMoeda}
                 onRemover={handleRemover}
                 onEditar={(assinaturaSelecionada) => setAssinaturaEditando(assinaturaSelecionada)}
+                onExcluir={handleExcluir}
               />
             ))}
           </ul>

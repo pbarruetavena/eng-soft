@@ -43,6 +43,13 @@ export function deleteSubscription(id) {
   });
 }
 
+export function excluirSubscription(id) {
+  return request(`/subscriptions/${id}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ ativo: false })
+  });
+}
+
 export async function getSubscriptionSummary() {
   return request(
     "/subscriptions/summary",
